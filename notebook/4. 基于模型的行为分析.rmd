@@ -1,0 +1,296 @@
+
+```{r}
+library(tidyverse)
+library(broom)
+library(flextable)
+library(apa)
+library(here)
+library(ggplot2)
+library(rstatix)
+library(ggpubr)
+library(patchwork)
+library(gghalves)
+```
+
+## Reading data
+
+```{r}
+raw_data <- read_csv(here("data","input","all_data_with_RL_BL_estimate_result.csv"))
+
+## Removing the outliers and error trials
+data_without_error <- filter(raw_data, Type == "hit")
+data_without_outlier <- data_without_error %>%
+                        group_by(Subject, congruency, prop, condition) %>%
+                        filter(abs(RT - mean(RT)) < (sd(RT) * 3))
+
+to_mean_RT <- data_without_outlier %>%
+  group_by(prop, condition, congruency) %>%
+  summarise(meanRT = mean(RT)) 
+to_mean_RT %>%
+  pivot_wider(names_from = congruency, values_from = meanRT) %>%
+  mutate(Simon = inc - con)
+```
+
+## 1. Check the consistency of the behavioral responses of the subjects and the estimated parameters of the model
+
+```{r}
+library(fastDummies)
+all_data <- raw_data
+all_data_without_error <- all_data %>%
+                            group_by(Subject_num, prop, congruency) %>%
+                            filter(Type == "hit") %>%
+                            filter(abs(RT - mean(RT)) < (sd(RT) * 3))
+sub_num_list <- unique(all_data_without_error$Subject_num)
+glimpse(all_data_without_error)
+result_list <- list()
+sub_count <- 1
+for (i in sub_num_list) {
+    tmp_data <- filter(all_data_without_error, Subject_num == i)
+    mini_num <- 1
+    mini_block <- vector(mode = "numeric", length = nrow(tmp_data))
+    mini_block[1] <- 1
+    for (line_num in 2:nrow(tmp_data)) {
+        if (tmp_data$prop[line_num] != tmp_data$prop[line_num - 1]) {
+            mini_num <- mini_num + 1
+        }
+        mini_block[line_num] <- mini_num
+    }
+    tmp_data$mini_block <- mini_block
+    result_list[[sub_count]] <- tmp_data
+    sub_count <- sub_count + 1
+}
+all_data_miniblock <- bind_rows(result_list, .id = "column_label")
+
+
+coef_bl_sr   <- vector(mode = "numeric", length(sub_num_list))
+coef_rl_sr   <- vector(mode = "numeric", length(sub_num_list))
+
+for (i in seq_len(length(sub_num_list))) {
+    single_sub_data <- all_data_without_error %>%
+                        filter(Subject_num == sub_num_list[i])
+    single_sub_data$rl_sr_v_pe <- 1 - single_sub_data$rl_sr_v_p_selected
+
+    tmp_data <- dummy_columns(
+        filter(
+            single_sub_data,
+            Subject_num == sub_num_list[i]
+        ),
+        "run"
+    ) %>%
+        select(-run)
+    
+    bl_sr_data <- select(tmp_data, RT, bl_sr_PE, congruency_num, hand, starts_with("run"))
+    model_bl_sr <- lm(RT ~ . -1, data = bl_sr_data)
+
+    rl_sr_data <- select(tmp_data, RT, rl_sr_v_pe, congruency_num, hand, starts_with("run"))
+    model_rl_sr <- lm(RT ~ . -1, data = rl_sr_data)
+
+    coef_bl_sr[i] <- coef(model_bl_sr)["bl_sr_PE"]
+    coef_rl_sr[i] <- coef(model_rl_sr)["rl_sr_v_pe"]
+}
+
+
+RA_confint <- data.frame(BL = coef_bl_sr, 
+                         RL = coef_rl_sr)
+print("ttest of BL")
+t.test(RA_confint$BL)
+rstatix::cohens_d(RA_confint, BL~0)
+
+print("ttest of RL")
+t.test(RA_confint$RL)
+rstatix::cohens_d(RA_confint, RL~0)
+```
+
+### 1.1 Make statistics on con and inc condition respectively
+
+```{r}
+coef_bl_sr_con   <- vector(mode = "numeric", length(sub_num_list))
+coef_bl_sr_inc   <- vector(mode = "numeric", length(sub_num_list))
+coef_rl_sr_con   <- vector(mode = "numeric", length(sub_num_list))
+coef_rl_sr_inc   <- vector(mode = "numeric", length(sub_num_list))
+
+for (i in seq_len(length(sub_num_list))) {
+    single_sub_data <- all_data_without_error %>%
+                        filter(Subject_num == sub_num_list[i])
+    single_sub_data$rl_sr_v_pe <- 1 - single_sub_data$rl_sr_v_p_selected
+
+    tmp_data <- dummy_columns(
+        filter(
+            single_sub_data,
+            Subject_num == sub_num_list[i]
+        ),
+        "run"
+    ) %>%
+        select(-run)
+    
+    bl_sr_data_con <- select(tmp_data, RT, bl_sr_PE, congruency_num, hand, starts_with("run")) %>%
+                        filter(congruency_num == 1)
+    model_bl_sr_con <- lm(RT ~ . -1, data = bl_sr_data_con)
+
+    rl_sr_data_con <- select(tmp_data, RT, rl_sr_v_pe, congruency_num, hand, starts_with("run")) %>%
+                        filter(congruency_num == 1)
+    model_rl_sr_con <- lm(RT ~ . -1, data = rl_sr_data_con)
+
+    bl_sr_data_inc <- select(tmp_data, RT, bl_sr_PE, congruency_num, hand, starts_with("run")) %>%
+                        filter(congruency_num == -1)
+    model_bl_sr_inc <- lm(RT ~ . -1, data = bl_sr_data_inc)
+
+    rl_sr_data_inc <- select(tmp_data, RT, rl_sr_v_pe, congruency_num, hand, starts_with("run")) %>%
+                        filter(congruency_num == -1)
+    model_rl_sr_inc <- lm(RT ~ . -1, data = rl_sr_data_inc)
+
+    coef_bl_sr_con[i] <- coef(model_bl_sr_con)["bl_sr_PE"]
+    coef_rl_sr_con[i] <- coef(model_rl_sr_con)["rl_sr_v_pe"]
+    coef_bl_sr_inc[i] <- coef(model_bl_sr_inc)["bl_sr_PE"]
+    coef_rl_sr_inc[i] <- coef(model_rl_sr_inc)["rl_sr_v_pe"]
+}
+t.test(coef_bl_sr_con)
+t.test(coef_bl_sr_inc)
+t.test(coef_rl_sr_con)
+t.test(coef_rl_sr_inc)
+lsr::cohensD(coef_bl_sr_con, 0)
+lsr::cohensD(coef_bl_sr_inc, 0)
+lsr::cohensD(coef_rl_sr_con, 0)
+lsr::cohensD(coef_rl_sr_inc, 0)
+```
+```
+```{r}
+# Plot for regression result 
+
+RA_boxplot_PE_to_Beh <- data.frame(coef_value = c(coef_bl_sr, coef_rl_sr),
+                                   model_type = c(rep("BL",
+                                                      length(coef_bl_sr)),
+                                                  rep("RL",
+                                                      length(coef_rl_sr))))
+
+MinMeanSEMMax <- function(x) {
+  v <- c(min(x), mean(x) - sd(x)/sqrt(length(x)), mean(x), mean(x) + sd(x)/sqrt(length(x)), max(x))
+  names(v) <- c("ymin", "lower", "middle", "upper", "ymax")
+  v
+}
+
+# ggplot(RA_boxplot_PE_to_Beh) + 
+#   stat_summary(aes(x = model_type, 
+#                    y = coef_value, 
+#                    fill = model_type), 
+#                fun.data = MinMeanSEMMax, geom = "boxplot", size = 0.8) +
+#   geom_dotplot(aes(x = model_type, y = coef_value), 
+#                binaxis='y', 
+#                stackdir='center',
+#                alpha = 0.4, binwidth = 5) + 
+#   theme_pubr() + rremove("legend") +
+#   guides(color=guide_legend("Model")) +
+#   theme(text = element_text(size = 15)) +
+#   labs(x = "Model Type", y = "Beta of regressior") -> boxplot_PE_reg
+
+ggplot(RA_boxplot_PE_to_Beh) + 
+  geom_boxplot(aes(x = model_type, 
+                   y = coef_value, 
+                   fill = model_type), size = 0.8) +
+  geom_dotplot(aes(x = model_type, y = coef_value), 
+               binaxis='y', 
+               stackdir='center',
+               alpha = 0.4, binwidth = 5) + 
+  theme_pubr() + rremove("legend") +
+  guides(color=guide_legend("Model")) +
+  theme(text = element_text(size = 15)) +
+  labs(x = "Model Type", y = "Beta of regressior") -> boxplot_PE_reg
+boxplot_PE_reg <- change_palette(boxplot_PE_reg, palette = "Paired")
+boxplot_PE_reg
+```
+
+## 2. A more accurate way to see the consistency of the behavioral responses of the subjects and the estimated parameters of the model：
+
+Divide the response time of different subjects into bins, then calculate the estimated PE / P in the bin, and draw a statistical chart
+```{r}
+# data_without_outlier$congruency <- data_without_outlier$congruency %>%
+#                                    str_replace("con", "Congruent") %>%
+#                                    str_replace("inc", "Incongruent")
+# data_without_outlier %>% 
+#     select(Subject_num, RT, bl_sr_PE, rl_sr_v_pe, congruency) %>% 
+#     pivot_longer(cols = c(bl_sr_PE, rl_sr_v_pe), 
+#                  values_to = "PE", 
+#                  names_to = "model_type") %>%
+#     mutate(bin = cut(PE, breaks = seq(0,1,0.25))) -> RA_sep_bin_analysis
+
+# RA_sep_bin_analysis %>%
+#   group_by(bin, model_type, congruency) %>%
+#   summarise(mean_RT = mean(RT), sd = sd(RT), 
+#             se_RT = sd(RT) / sqrt(32), mean_PE = mean(PE)) %>%
+#   ggplot(aes(x = mean_PE, y = mean_RT)) +
+#   geom_errorbar(aes(ymax = mean_RT + se_RT, ymin = mean_RT - se_RT), 
+#                 width = 0.1, size = 0.8, alpha = 0.5) +
+#   geom_line(aes(group = congruency, color = congruency),
+#             size = 1) +
+#   geom_point(aes(color = congruency), size = 1.5) +
+#   facet_grid(model_type ~ ., labeller = as_labeller(c(bl_sr_PE = "BL", rl_sr_v_pe = "RL"))) + 
+#   theme_pubr() + xlab("Mean of PEs") + ylab("Mean of RTs") + 
+#   theme(text = element_text(size = 15)) +
+#   scale_color_discrete(name = "", labels = c("Congruent", "Incongruent")) -> plot_PE_RT_bin
+# plot_PE_RT_bin
+```
+
+```{r}
+data_without_outlier$congruency <- data_without_outlier$congruency %>%
+                                   str_replace("con", "Congruent") %>%
+                                   str_replace("inc", "Incongruent")
+data_without_outlier %>% 
+    select(Subject_num, RT, bl_sr_PE, rl_sr_v_pe, congruency, Trial) %>% 
+    pivot_longer(cols = c(bl_sr_PE, rl_sr_v_pe), 
+                 values_to = "PE", 
+                 names_to = "model_type") -> RA_sep_bin_analysis
+RA_sep_bin_analysis %>%
+    group_by(Subject_num, model_type) %>%
+    arrange(PE, .by_group = TRUE) %>%
+    mutate(Trial_count = row_number(), total_count = n()) %>%
+    mutate(bin_trial = cut(Trial_count, breaks = seq(0,961,240))) -> RA_sep_bin_analysis
+
+RA_sep_bin_analysis %>%
+  group_by(bin_trial, model_type, congruency) %>%
+  summarise(mean_RT = mean(RT), sd = sd(RT), 
+            se_RT = sd(RT) / sqrt(32), mean_PE = mean(PE)) %>%
+  ggplot(aes(x = mean_PE, y = mean_RT)) +
+  geom_errorbar(aes(ymax = mean_RT + se_RT, ymin = mean_RT - se_RT), 
+                alpha = 0.8, width = 0.03, size = 0.8) +
+  geom_line(aes(group = congruency, color = congruency),
+            size = 1) +
+  geom_point(aes(color = congruency), size = 1.5) +
+  facet_grid(model_type ~ ., labeller = as_labeller(c(bl_sr_PE = "BL", rl_sr_v_pe = "RL"))) + 
+  theme_pubr() + xlab("Mean of PEs") + ylab("Mean of RTs") + 
+  theme(text = element_text(size = 15)) +
+  scale_color_discrete(name = "", labels = c("Congruent", "Incongruent")) -> plot_PE_RT_bin
+plot_PE_RT_bin
+```
+```
+```{r}
+boxplot_PE_reg + plot_PE_RT_bin + plot_annotation(tag_levels = 'A') -> pf
+pf
+ggsave("/Users/dddd1007/Library/CloudStorage/Dropbox/工作/博士工作/撰写论文/JoN投稿/图表/行为结果素材/model_beh_plot.png", pf, 
+       width = 10, height = 6, units = "cm", scale = 2.5)
+ggsave("/Users/dddd1007/Library/CloudStorage/Dropbox/工作/博士工作/撰写论文/JoN投稿/图表/行为结果素材/for_pub/model_beh_plot.tiff", pf, 
+       width = 10, height = 6, units = "cm", scale = 2.5, dpi = 500)
+```
+
+```{r}
+# 查看 PE 大的时候 con / inc 的均值
+
+data_without_outlier %>%
+  filter(bl_sr_PE > 0.6) %>%
+  group_by(prop, congruency) %>%
+  summarise(meanRT = mean(RT)) %>%
+  cbind(PE = 0.6) -> foo
+data_without_outlier %>%
+  filter(bl_sr_PE < 0.4) %>%
+  group_by(prop, congruency) %>%
+  summarise(meanRT = mean(RT)) %>%
+  cbind(PE = 0.4) -> bar
+
+```
+
+```{r}
+wrap_plots(A = boxplot_PE_reg, B = p2, design = "ABB") -> pf
+ggsave(here("data", "output", "plot", "model_based_beh.png"), 
+       pf + plot_annotation(tag_levels = 'A'),
+       width = 9.5, height = 6,
+       dpi = 300)
+```

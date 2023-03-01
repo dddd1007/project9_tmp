@@ -1,0 +1,124 @@
+---
+title: "2. 模型比较"
+output: html_document
+---
+
+## 数据准备
+
+```{r}
+library(tidyverse)
+library(fastDummies)
+library(here)
+all_data <- read_csv(here("data","input","behavioral_data", "all_data_with_model_params.csv"))
+all_data_without_error <- all_data %>%
+                            group_by(sub_num, prop, congruency) %>%
+                            filter(stim_resp.corr == 1) %>%
+                            filter(abs(stim_resp.rt - mean(stim_resp.rt)) < (sd(stim_resp.rt) * 3))
+sub_num_list <- unique(all_data_without_error$sub_num)
+glimpse(all_data_without_error)
+mse <- function(sm) {
+    mean(sm$residuals^2) }
+```
+
+```{r}
+result_list <- list()
+sub_count <- 1
+for (i in sub_num_list) {
+    tmp_data <- filter(all_data_without_error, sub_num == i)
+    mini_num <- 1
+    mini_block <- vector(mode = "numeric", length = nrow(tmp_data))
+    mini_block[1] <- 1
+    for (line_num in 2:nrow(tmp_data)) {
+        if (tmp_data$prop[line_num] != tmp_data$prop[line_num - 1]) {
+            mini_num <- mini_num + 1
+        }
+        mini_block[line_num] <- mini_num
+    }
+    tmp_data$mini_block <- mini_block
+    result_list[[sub_count]] <- tmp_data
+    sub_count <- sub_count + 1
+}
+all_data_miniblock <- bind_rows(result_list, .id = "column_label") %>%
+                      select(-run_begin_time)
+```
+
+## 与反应时之间的变量关系
+
+### 添加 Run 作为截距
+
+```{r}
+# 根据反应时比较 MSE, 此时应当用当前s-r对应的p来拟合
+aic_bl_ab   <- vector(mode = "numeric", length(sub_num_list))
+aic_bl_sr   <- vector(mode = "numeric", length(sub_num_list))
+aic_rl_ab     <- vector(mode = "numeric", length(sub_num_list))
+aic_rl_ab_v   <- vector(mode = "numeric", length(sub_num_list))
+aic_rl_sr     <- vector(mode = "numeric", length(sub_num_list))
+aic_rl_sr_v   <- vector(mode = "numeric", length(sub_num_list))
+
+for (i in sub_num_list) {
+    single_sub_data <- all_data_without_error %>%
+                        filter(sub_num == sub_num_list[i])
+
+    tmp_data <- dummy_columns(
+        filter(
+            single_sub_data,
+            sub_num == sub_num_list[i]
+        ),
+        "run"
+    ) %>%
+        select(-run)
+    bl_ab_data <- select(tmp_data, stim_resp.rt, bl_ab_PE, congruency_num, corr_resp_num, starts_with("run"))
+    model_bl_ab <- lm(stim_resp.rt ~ . -1, data = bl_ab_data)
+
+    bl_sr_data <- select(tmp_data, stim_resp.rt, bl_sr_PE, congruency_num, corr_resp_num, starts_with("run"))
+    model_bl_sr <- lm(stim_resp.rt ~ . -1, data = bl_sr_data)
+
+    rl_ab_no_v_data <- select(tmp_data, stim_resp.rt, rl_ab_no_v_pe, congruency_num, corr_resp_num, starts_with("run"))
+    model_rl_ab_no_v <- lm(stim_resp.rt ~ . -1, data = rl_ab_no_v_data)
+
+    rl_ab_v_data <- select(tmp_data, stim_resp.rt, rl_ab_v_pe, congruency_num, corr_resp_num, starts_with("run"))
+    model_rl_ab_v <- lm(stim_resp.rt ~ . -1, data = rl_ab_v_data)
+
+    rl_sr_no_v_data <- select(tmp_data, stim_resp.rt, rl_sr_no_v_pe, congruency_num, corr_resp_num, starts_with("run"))
+    model_rl_sr_no_v <- lm(stim_resp.rt ~ . -1, data = rl_sr_no_v_data)
+
+    rl_sr_v_data <- select(tmp_data, stim_resp.rt, rl_sr_v_pe, congruency_num, corr_resp_num, starts_with("run"))
+    model_rl_sr_v <- lm(stim_resp.rt ~ . -1, data = rl_sr_v_data)
+
+    aic_bl_ab_v[i] <- mse(model_bl_ab)
+    aic_bl_sr_v[i] <- mse(model_bl_sr)
+    aic_rl_ab[i]   <- mse(model_rl_ab_no_v)
+    aic_rl_ab_v[i] <- mse(model_rl_ab_v)
+    aic_rl_sr[i]   <- mse(model_rl_sr_no_v)
+    aic_rl_sr_v[i] <- mse(model_rl_sr_v)
+}
+
+RT_MSE <- data.frame(sub_num = sub_num_list, bl_ab = aic_bl_ab_v,
+                       bl_sr = aic_bl_sr_v, rl_ab = aic_rl_ab,
+                       rl_sr = aic_rl_sr, rl_ab_v = aic_rl_ab_v,
+                       rl_sr_v = aic_rl_sr_v)
+
+RT_MSE
+write.csv(RT_MSE, here("data", "output", "mse_model_comparision.csv"))
+```
+
+得到的 BMS 结果
+a =
+    6.6669    6.6669    6.6665    6.6665    6.6665    6.6665
+b =
+    0.1667    0.1667    0.1667    0.1667    0.1667    0.1667
+c =
+    0.1663    0.1660    0.1672    0.1672    0.1666    0.1667
+d =
+    0.1667    0.1667    0.1667    0.1667    0.1667    0.1667
+e =
+    0.9942
+
+BMS 的帮助
+  OUTPUT:
+  alpha   - vector of model probabilities
+  exp_r   - expectation of the posterior p(r|y)
+  xp      - exceedance probabilities
+  pxp     - protected exceedance probabilities
+  bor     - Bayes Omnibus Risk (probability that model frequencies 
+            are equal)

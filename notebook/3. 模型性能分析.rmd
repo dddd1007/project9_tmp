@@ -1,0 +1,138 @@
+# 模型拟合结果的分析
+
+我们将从以下结果来探讨模型拟合结果：
+
+-   模型的估计结果是否符合实验设计
+-   模型在 inc/con, prop 和 volatile 上的估计结果是否存在差异
+
+## 1. 模型估计的变量结果是否符合实验设计
+
+```{r}
+library(ggplot2)
+library(tidyverse)
+library(here)
+library(ggsci)
+library(ggthemes)
+library(rstatix)
+library(ggpubr)
+library(patchwork)
+
+all_data <- read.csv(here("data", "input", "behavioral_data", "all_data_for_fmri_with_model_params.csv"))
+```
+
+```{r}
+##
+all_data %>%
+  select(prop, prop_mean_num, bl_sr_ll, bl_sr_rr, rl_sr_v_pe, sub_num, trial) %>%
+  mutate(mean_bl = (bl_sr_ll + bl_sr_rr) / 2) -> foo
+
+for (i in 1:32) {
+  bar <- filter(foo, sub_num == i)
+  print("===")
+  print(paste0("Sub ", as.character(i), " Bayesian Model corr is ",
+        as.character(cor.test(bar$prop_mean_num, bar$mean_bl)$estimate[1])))
+  print(paste0("Sub ", as.character(i), " Reinforcement Learning corr is ",
+        as.character(cor.test(bar$rl_sr_v_pe, bar$mean_bl)$estimate[1])))
+}
+
+cor.test(all_data$bl_sr_PE, all_data$rl_sr_v_pe)
+```
+
+## 2. 对模型估计参数是否符合实验设计预期进行分析
+
+根据预期假设, 无论是强化学习模型, 还是贝叶斯模型, 均能够反映环境的稳定或不稳定特征.
+
+对于贝叶斯学习者模型, 应当是在稳定/不稳定环境下, 估计出的 v 参数应存在差异. 对于强化学习模型, 应当是估计的参数在稳定不稳定环境下, 学习率存在差异.
+
+```{r}
+# For bayesian learner data
+
+##
+# Step 1 : Making a ttest to compare the v under volatile / stable volatile
+# Step 2 : Plot the mean of v under each volatile for every subjects
+
+# get the mean of each sub under each volatiles
+bl_v_volatile_sep <- select(all_data, "sub_num", "volatile", "bl_sr_v") %>%
+        group_by(sub_num, volatile) %>%
+        summarise(v_mean = mean(bl_sr_v), .groups = "drop")
+bl_v_volatile_sep$volatile <- factor(bl_v_volatile_sep$volatile)
+paired_plot_data <- pivot_wider(bl_v_volatile_sep,
+                                names_from = "volatile", values_from = "v_mean")
+get_summary_stats(paired_plot_data, type = "common")
+print("=== TTEST RESULT ===")
+bl_v_ttest <- select(all_data, "sub_num", "volatile", "bl_sr_v") %>%
+        group_by(sub_num, volatile) %>%
+        summarise(v_mean = mean(bl_sr_v), .groups = "drop")
+t.test(v_mean ~ volatile, data = bl_v_ttest, paired = TRUE, alternative = "less")
+select(all_data, "sub_num", "volatile", "bl_sr_v") %>%
+        group_by(sub_num, volatile) %>%
+        summarise(v_mean = mean(bl_sr_v), .groups = "drop") %>%
+        cohens_d(v_mean ~ volatile, paired = TRUE)
+paired_plot_data %>%
+  pivot_longer(cols = -sub_num, names_to = "Volatile", values_to = "v") %>%
+  ggplot() +
+  geom_boxplot(aes(x = Volatile,
+                   y = v), fill = "#ff8582") +
+  geom_dotplot(aes(x = Volatile, y = v),
+               binaxis = "y",
+               stackdir = "center",
+               alpha = 0.4,
+               binwidth = 0.03) +
+  theme(text = element_text(size = 35)) + xlab("") + ylab("Volatility") +
+  scale_x_discrete(labels = c("Stable", "Volatile")) +
+  theme_pubr() + rremove("legend")  -> bl_v_plot
+#bl_v_plot <- change_palette(bl_v_plot, palette = "Paired")
+bl_v_plot
+```
+
+```{r}
+# for reinforcement learning
+rl_model_param_sets <- read.csv(here("data", "output", "model_estimation",
+                                     "reinforcement_learning", "optim_para_sr_v.csv"))
+## compare the mean alpha between stable and volatile volatile
+rl_model_param_sets %>%
+    select(sub_num, "alpha_s", "alpha_v") -> plot_data
+names(plot_data) <- c("sub", "s", "v")
+
+rl_alpha_ttest <- plot_data %>%
+    pivot_longer(cols = c("s", "v"),
+                 names_to = "type",
+                 values_to = "alpha")
+t.test(alpha ~ type, data = rl_alpha_ttest, paired = TRUE,
+       alternative = "less")
+
+
+plot_data %>%
+    pivot_longer(cols = c("s", "v"), names_to = "type",
+                 values_to = "alpha") %>%
+    cohens_d(alpha ~ type, paired = TRUE)
+
+plot_data %>%
+  pivot_longer(cols = -sub, names_to = "Volatile", values_to = "alpha") %>%
+  ggplot() +
+  geom_boxplot(aes(x = Volatile,
+                   y = alpha), fill = "#00cccf") +
+  geom_dotplot(aes(x = Volatile, y = alpha),
+               binaxis = "y",
+               stackdir = "center",
+               alpha = 0.4,
+               binwidth = 0.004) +
+  theme(text = element_text(size = 35)) +
+  theme_pubr() + rremove("legend") + xlab("") + ylab("Learning rate") +
+  scale_x_discrete(labels= c("Stable", "Volatile")) -> rl_v_plot
+rl_v_plot
+```
+
+
+```{r}
+#拼图
+plot_b      <- bl_v_plot + rl_v_plot
+plot_b[[2]] <- plot_b[[2]] +  plot_layout(tag_level = "new")
+wrap_plots(plot_a = p1, plot_b, design = "plot_a
+                                          plot_b") +
+          plot_annotation(tag_levels = c("A")) -> pf
+pf
+ggsave(here("output", "plot", "model_performance.png"), pf,
+       width = 11, height = 12, unit = "cm", dpi = 550, scale = 1.6)
+```
+
