@@ -2,6 +2,7 @@ all_data_without_outlier
 
 total_result_list <- array(0, dim = c(3,4,length(unique(all_data_without_outlier$sub_num))))
 for (i in unique(all_data_without_outlier$sub_num)){
+    print(paste0("============ Begin to process the data of one subject ", i, " ============"))
     foo <- all_data_without_outlier %>%
         filter(sub_num == i) %>%
         select(stim_resp.rt, congruency, prop, volatile, trial, sub_num) %>%

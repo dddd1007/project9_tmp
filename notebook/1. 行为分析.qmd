@@ -4,40 +4,33 @@
 ```{r message=FALSE}
 rm(list = ls())
 library(tidyverse)
+library(writexl)
 library(here)
 library(pivottabler)
+library(readr)
 all_data <- read_csv(here("data", "input", "behavioral_data", "all_data.csv"))
-```
-
-## 对数据的缺失值进行填补
-```{r}
-# library(mice)
-# md.pattern(all_data)
-# all_data_fixed <- mice(all_data, m=5, maxit = 50)
-# summary(all_data_fixed)
-# all_data_for_beh <- complete(all_data_fixed)
 ```
 
 ## 对数据进行描述统计
 ```{r}
 # 反应时
 all_data_without_outlier <- all_data %>%
-    filter(corr_resp == 1) %>% 
-    group_by(sub_num, congruency, prop, volatile, rule) %>% 
-    filter(between(stim_resp.rt, mean(stim_resp.rt, na.rm = TRUE) - 
-                     (3 * sd(stim_resp.rt, na.rm = TRUE)), 
-                                 mean(stim_resp.rt, na.rm = TRUE) + 
+    filter(corr_resp == 1) %>%
+    group_by(sub_num, congruency, prop, volatile, rule) %>%
+    filter(between(stim_resp.rt, mean(stim_resp.rt, na.rm = TRUE) -
+                     (3 * sd(stim_resp.rt, na.rm = TRUE)),
+                                 mean(stim_resp.rt, na.rm = TRUE) +
                      (3 * sd(stim_resp.rt, na.rm = TRUE)))) %>%
     ungroup()
 
-rt_result_a <- qpvt(all_data_without_outlier, 
-                    "congruency", "prop", 
+rt_result_a <- qpvt(all_data_without_outlier,
+                    "congruency", "prop",
                     "mean(stim_resp.rt, na.rm = T)")
-rt_result_b <- qpvt(all_data_without_outlier, 
-                    c("rule", "congruency"), "prop", 
+rt_result_b <- qpvt(all_data_without_outlier,
+                    c("rule", "congruency"), "prop",
                     "mean(stim_resp.rt, na.rm = T)")
-rt_result_c <- qpvt(all_data_without_outlier, 
-                    c("volatile", "congruency"), "prop", 
+rt_result_c <- qpvt(all_data_without_outlier,
+                    c("volatile", "congruency"), "prop",
                     "mean(stim_resp.rt, na.rm = T)")
 rt_result_a
 rt_result_b
@@ -45,18 +38,18 @@ rt_result_c
 
 # 正确率
 foo <- filter(all_data_without_outlier, sub_num > 8)
-corr_result_a <- qpvt(foo, "congruency", "prop", 
+corr_result_a <- qpvt(foo, "congruency", "prop",
                       "mean(stim_resp.corr, na.rm = T)")
-corr_result_b <- qpvt(foo, c("rule", "congruency"), "prop", 
+corr_result_b <- qpvt(foo, c("rule", "congruency"), "prop",
                       "mean(stim_resp.corr, na.rm = T)")
-corr_result_c <- qpvt(foo, c("volatile", "congruency"), "prop", 
+corr_result_c <- qpvt(foo, c("volatile", "congruency"), "prop",
                       "mean(stim_resp.corr, na.rm = T)")
 corr_result_a
 corr_result_b
 corr_result_c
 
-total_result_list <- list(rt_result_a$asDataFrame(),   
-                          rt_result_b$asDataFrame(),  
+total_result_list <- list(rt_result_a$asDataFrame(),
+                          rt_result_b$asDataFrame(),
                           rt_result_c$asDataFrame(),
                           corr_result_a$asDataFrame(),
                           corr_result_b$asDataFrame(),
@@ -73,17 +66,17 @@ for (i in unique(all_data$sub_num)) {
                                  "mean(stim_resp.rt, na.rm = T)")
     print(single_stroop_result)
     foo <- single_stroop_result$asDataFrame()
-    foo <- cbind(foo[c(1,2,4,5),1:2], 
-                 volatile = c("s", "s", "v", "v"), 
+    foo <- cbind(foo[c(1,2,4,5),1:2],
+                 volatile = c("s", "s", "v", "v"),
                  congruency = c("con", "inc", "con", "inc"))
-    foo %>% tidyr::pivot_longer(cols = c("MC", "MI"), 
-                                names_to = "prop", 
+    foo %>% tidyr::pivot_longer(cols = c("MC", "MI"),
+                                names_to = "prop",
                                 values_to = "mean_rt") %>%
-        pivot_wider(names_from = congruency, 
+        pivot_wider(names_from = congruency,
                     values_from = mean_rt) %>%
         group_by(prop, volatile) %>%
         summarise(stroop_effect = inc - con) %>%
-        tidyr::pivot_wider(names_from = prop, 
+        tidyr::pivot_wider(names_from = prop,
                            values_from = stroop_effect) -> bar
     foo$idx <- c(1,2,4,5)
     bar <- cbind(bar, congruency = rep("stroop_effect",2), idx = c(3,6))
@@ -91,7 +84,7 @@ for (i in unique(all_data$sub_num)) {
     single_sub_stroop_list[[i]] <- result
 }
 single_sub_stroop_table <- bind_rows(single_sub_stroop_list, .id = "column_label")
-write_xlsx(single_sub_stroop_table, here("data", "output", 
+write_xlsx(single_sub_stroop_table, here("data", "output",
                                          "behavior", "single_sub_spatial_stroop.xlsx"))
 ```
 
@@ -103,12 +96,13 @@ aov(stim_resp.rt ~ congruency * prop * volatile, data = all_data_without_outlier
 ## 绘制 Delta plot 和 CFAs
 ```{r}
 # Delta plot
-source(here("script", "beh", "delta_plot.R"))
+source(here("script", "beh", "01_behavioral_data_analysis", "delta_plot.R"))
 delta_plot
 ggsave(here("data", "output", "project9_delta_plot.png"), delta_plot, width = 5, height = 3, dpi = 500)
-
+```
+```{r}
 # CAFs plotq
-source(here("script", "beh", "cafs_plot.R"))
+source(here("script", "beh", "01_behavioral_data_analysis", "cafs_plot.R"))
 cafs_plot
 ggsave(here("data", "output", "project9_cafs_plot.png"), cafs_plot, width = 5, height = 3, dpi = 500)
 ```

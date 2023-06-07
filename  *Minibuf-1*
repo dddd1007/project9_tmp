@@ -1,0 +1,17 @@
+18   File to save in: ~/Research/project9_fmri_spatial_stroop/
+./
+../
+.Rproj.user/
+.git/
+.idea/
+.virtual_documents/
+data/
+documents/
+notebook/
+program/
+script/
+.DS_Store
+.Rhistory
+.gitignore
+.here
+Subjects_List_fMRI.xlsx
