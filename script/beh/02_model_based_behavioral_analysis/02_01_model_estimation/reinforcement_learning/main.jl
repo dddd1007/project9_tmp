@@ -1,11 +1,11 @@
-using DataFrames, GLM, StatsBase, CSV, DataFramesMeta
+using DataFrames, GLM, StatsBase, CSV, Tidier, DataFramesMeta
 include("def_data_type.jl")
 include("calc_goodness.jl")
 include("estimate_models.jl")
 
 # import the data
-raw_data  = CSV.read("/Volumes/ResearchData/project9_fmri_spatial_stroop/data/input/behavioral_data/all_data.csv", DataFrame)
-save_path = "/Volumes/ResearchData/project9_fmri_spatial_stroop/data/output/model_estimation/reinforcement_learning/single_sub"
+raw_data  = CSV.read("/Volumes/XXK-DISK/project9_fmri_spatial_stroop/data/input/behavioral_data/all_data.csv", DataFrame)
+save_path = "/Volumes/XXK-DISK/project9_fmri_spatial_stroop/data/output/model_estimation/reinforcement_learning/single_sub"
 
 # get basic parameters
 sub_list = unique(raw_data[!,:sub_num])
@@ -17,11 +17,11 @@ for sub_num_i in sub_list
     single_sub_data = @subset(raw_data, :sub_num .== sub_num_i)
 
     # 选出用于分析的向量
-    stim_loc_vector   = single_sub_data[!, :stim_loc_num]     # 上为0，下为1
-    stim_text_vector  = single_sub_data[!, :stim_text_num]    # 上为0， 下为1
-    resp_vector       = single_sub_data[!, :corr_resp_num]    # 左手为0， 右手为1
-    congruency_vector = single_sub_data[!, :congruency_num]   # con为0， inc为1
-    volatile_vector   = single_sub_data[!, :volatile_num]     # 稳定为0， 不稳定为1
+    stim_loc_vector   = single_sub_data[!, :stim_loc_num]     # 上为 0，下为 1
+    stim_text_vector  = single_sub_data[!, :stim_text_num]    # 上为 0， 下为 1
+    resp_vector       = single_sub_data[!, :corr_resp_num]    # 左手为 0， 右手为 1
+    congruency_vector = single_sub_data[!, :congruency_num]   # con 为 0， inc 为 1
+    volatile_vector   = single_sub_data[!, :volatile_num]     # 稳定为 0， 不稳定为 1
 
     ### 开始进行模型估计
 
@@ -95,7 +95,7 @@ for sub_num_i in sub_list
 end
 
 ###### model recovery
-optim_param_file_loc = "/Volumes/ResearchData/project9_fmri_spatial_stroop/data/output/model_estimation/reinforcement_learning"
+optim_param_file_loc = "/Volumes/XXK-DISK/project9_fmri_spatial_stroop/data/output/model_estimation/reinforcement_learning/single_sub/"
 model_type_list = ["ab_no_v", "ab_v", "sr_no_v", "sr_v"]
 
 ab_no_v_p  = []
@@ -110,34 +110,45 @@ sr_v_ll    = []
 sr_v_rl    = []
 
 for model_type in model_type_list
-    file_path = optim_param_file_loc * "/optim_para_" * model_type * ".csv"
-    optim_param_table = CSV.read(file_path, DataFrame)
-
     for sub_num_i in sub_list
-        single_sub_param = @subset(optim_param_table, :sub_num .== sub_num_i)
+        print("====== sub_num: ", sub_num_i, "\n")
+
+        param_file_name = optim_param_file_loc * model_type * "/sub_" * string(sub_num_i) * "_" * model_type * ".csv"
+        single_sub_param = CSV.read(param_file_name, DataFrame)
+        single_sub_param = @filter(single_sub_param, loglikelihood == maximum(loglikelihood))
         single_sub_data = @subset(raw_data, :sub_num .== sub_num_i)
 
         # 选出用于分析的向量
-        stim_loc_vector   = single_sub_data[!, :stim_loc_num]     # 上为0，下为1
-        stim_text_vector  = single_sub_data[!, :stim_text_num]    # 上为0， 下为1
-        resp_vector       = single_sub_data[!, :corr_resp_num]    # 左手为0， 右手为1
-        congruency_vector = single_sub_data[!, :congruency_num]   # con为0， inc为1
-        volatile_vector   = single_sub_data[!, :volatile_num]     # 稳定为0， 不稳定为1
+        stim_loc_vector   = single_sub_data[!, :stim_loc_num]     # 上为 0，下为 1
+        stim_text_vector  = single_sub_data[!, :stim_text_num]    # 上为 0， 下为 1
+        resp_vector       = single_sub_data[!, :corr_resp_num]    # 左手为 0， 右手为 1
+        congruency_vector = single_sub_data[!, :congruency_num]   # con 为 0， inc 为 1
+        volatile_vector   = single_sub_data[!, :volatile_num]     # 稳定为 0， 不稳定为 1
 
         if model_type == "ab_no_v"
+            print("ab_no_v\n")
+            print("the alpha is", single_sub_param.alpha[1], "\n")
+            print("the loglikelihood is", single_sub_param.loglikelihood[1], "\n")
             model_result = ab_model(single_sub_param.alpha[1], congruency_vector)
             ab_no_v_p  = vcat(ab_no_v_p,  model_result["Predicted sequence"])
             ab_no_v_pe = vcat(ab_no_v_pe, abs.(model_result["Prediciton error"]))
         end
 
         if model_type == "ab_v"
-            model_result = ab_volatility_model(single_sub_param.alpha_s[1], single_sub_param.alpha_v[1], 
+            print("ab_v\n")
+            print("the alpha_s is", single_sub_param.alpha_s[1], "\n")
+            print("the alpha_v is", single_sub_param.alpha_v[1], "\n")
+            print("the loglikelihood is", single_sub_param.loglikelihood[1], "\n")
+            model_result = ab_volatility_model(single_sub_param.alpha_s[1], single_sub_param.alpha_v[1],
                                                congruency_vector, volatile_vector)
             ab_v_p  = vcat(ab_v_p,  model_result["Predicted sequence"])
             ab_v_pe = vcat(ab_v_pe, abs.(model_result["Prediciton error"]))
         end
 
         if model_type == "sr_no_v"
+            print("sr_no_v\n")
+            print("the alpha is", single_sub_param.alpha[1], "\n")
+            print("the loglikelihood is", single_sub_param.loglikelihood[1], "\n")
             model_result = sr_sep_alpha_model(single_sub_param.alpha[1], single_sub_param.alpha[1],
                                               stim_loc_vector, resp_vector)
             sr_no_v_p  = vcat(sr_no_v_p,  model_result["Predicted sequence"])
@@ -145,7 +156,11 @@ for model_type in model_type_list
         end
 
         if model_type == "sr_v"
-            model_result = sr_sep_alpha_volatility_model(single_sub_param.alpha_s[1], single_sub_param.alpha_s[1], 
+            print("sr_v\n")
+            print("the alpha_s is", single_sub_param.alpha_s[1], "\n")
+            print("the alpha_v is", single_sub_param.alpha_v[1], "\n")
+            print("the loglikelihood is", single_sub_param.loglikelihood[1], "\n")
+            model_result = sr_sep_alpha_volatility_model(single_sub_param.alpha_s[1], single_sub_param.alpha_s[1],
                                                          single_sub_param.alpha_v[1], single_sub_param.alpha_v[1],
                                                          stim_loc_vector, resp_vector, volatile_vector)
             sr_v_p  = vcat(sr_v_p,  model_result["Predicted sequence"])
@@ -171,6 +186,6 @@ all_data_with_rl = insertcols(raw_data, (:rl_ab_no_v_p  => ab_no_v_p),
 
 # Save the result
 import XLSX
-XLSX.writetable("/Volumes/ResearchData/project9_fmri_spatial_stroop/data/output/behavior/all_data_with_rl.xlsx",
+XLSX.writetable("/Volumes/XXK-DISK/project9_fmri_spatial_stroop/data/output/behavior/all_data_with_rl.xlsx",
                 all_data_with_rl,
                 overwrite=true)

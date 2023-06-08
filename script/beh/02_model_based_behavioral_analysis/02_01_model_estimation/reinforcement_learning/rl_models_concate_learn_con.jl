@@ -1,4 +1,4 @@
-#= 
+#=
 尝试使用 concate 模型学习 con/inc 来对概率进行估计
 即左侧空间位置学习左反应，右侧空间位置学习右反应
 =#
@@ -79,7 +79,6 @@ function calc_fit_idx(model_fitting, fit_idx)
 end
 
 using DataFrames, DataFramesMeta, CSV, GLM, StatsBase
-raw_data = DataFrame(CSV.File("/Users/dddd1007/Library/CloudStorage/Dropbox/工作/博士工作/实验数据与程序/Project0_cognitive_control_model/data/input/all_data_with_concate_learn_congruency.csv"))
 
 nodenames = ["sub_num", "α_s", "α_v", "loglikelihood"]
 result_table = DataFrame([[] for _ in nodenames], nodenames)
@@ -115,10 +114,7 @@ for sub_num in unique(raw_data."Subject_num")
 	end
 end
 
-CSV.write("/Users/dddd1007/Library/CloudStorage/Dropbox/工作/博士工作/实验数据与程序/Project0_cognitive_control_model/data/output/rl_model_estimate_by_stim/rl_sr_hand_to_con.csv", result_table)
-
 # 计算每个最优参数对应的序列
-best_param_set = DataFrame(CSV.File("/Users/dddd1007/Library/CloudStorage/Dropbox/工作/博士工作/实验数据与程序/Project0_cognitive_control_model/data/output/rl_model_estimate_by_stim/sr_hand_to_con_param_set.csv"))
 
 result_table = DataFrame([[],[],[],[],[]], ["sub_num", "rl_sr_con_ll", "rl_sr_con_rr", "rl_sr_con_pe", "rl_sr_con_p"])
 for i in unique(best_param_set."sub_num")
@@ -132,12 +128,11 @@ for i in unique(best_param_set."sub_num")
     rl_model_result = sr_volatility_model(α_s, α_v,
 				                          stim_loc_seq, hand_to_con, exp_volatility_seq;
 				                          drop_last_one = true)
-    foo = hcat(repeat([i],length(rl_model_result["Predicied Left sequence"])), 
-               rl_model_result["Predicied Left sequence"], 
-               rl_model_result["Predicied Right sequence"], 
+    foo = hcat(repeat([i],length(rl_model_result["Predicied Left sequence"])),
+               rl_model_result["Predicied Left sequence"],
+               rl_model_result["Predicied Right sequence"],
                rl_model_result["Prediciton error"],
                rl_model_result["Predicted sequence"])
     result_table = vcat(result_table, DataFrame(foo, ["sub_num", "rl_sr_con_ll", "rl_sr_con_rr", "rl_sr_con_pe", "rl_sr_con_p"]))
 end
-    
-CSV.write("/Users/dddd1007/Library/CloudStorage/Dropbox/工作/博士工作/实验数据与程序/Project0_cognitive_control_model/data/input/rl_sr_con_p.csv", result_table)
+

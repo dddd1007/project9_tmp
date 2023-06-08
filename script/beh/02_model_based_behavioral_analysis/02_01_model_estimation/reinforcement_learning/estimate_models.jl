@@ -20,8 +20,8 @@
     + 0: 不一致
     + 1: 一致
 - stim_loc_seq:
-    + 0: 左
-    + 1: 右
+    + 0: 上
+    + 1: 下
 - reaction_loc_seq:
     + 0: 左
     + 1: 右
@@ -97,7 +97,7 @@ function sr_volatility_model(α_s::Float64, α_v::Float64, stim_loc_seq,
     # Update predict code sequence
     for i in 1:length(stim_loc_seq)
         if exp_volatility_seq[i] == 0
-            if stim_loc_seq[i] == 0 # Stim come from left
+            if stim_loc_seq[i] == 0 # Stim come from top
                 predict_seq[i] = predict_l_l
                 PE = reaction_loc_seq[i] - predict_l_l
                 predict_l_l = predict_l_l + α_s * PE
@@ -113,7 +113,7 @@ function sr_volatility_model(α_s::Float64, α_v::Float64, stim_loc_seq,
                 prediction_error_seq[i] = PE
             end
         else
-            if stim_loc_seq[i] == 0 # Stim come from left
+            if stim_loc_seq[i] == 0 # Stim come from top
                 predict_seq[i] = predict_l_l
                 PE = reaction_loc_seq[i] - predict_l_l
                 predict_l_l = predict_l_l + α_v * PE
@@ -158,7 +158,7 @@ function sr_sep_alpha_model(α_l::Float64, α_r::Float64, stim_loc_seq::Vector{I
 
     # Update predict code sequence
     for i in 1:length(stim_loc_seq)
-        if stim_loc_seq[i] == 0 # Stim come from left
+        if stim_loc_seq[i] == 0 # Stim come from top
             PE = reaction_loc_seq[i] - predict_l_l
             predict_seq[i] = predict_l_l
             predict_l_l = predict_l_l + α_l * PE

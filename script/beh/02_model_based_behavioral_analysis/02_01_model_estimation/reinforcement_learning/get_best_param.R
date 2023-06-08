@@ -1,7 +1,7 @@
 library(tidyverse)
 cate_list <- c("ab_no_v", "ab_v", "sr_no_v", "sr_v")
-base_data_path = "/Users/dddd1007/ResearchData/project9_fmri_spatial_stroop/data/output/model_estimation/reinforcement_learning/single_sub"
-save_data_path = "/Users/dddd1007/ResearchData/project9_fmri_spatial_stroop/data/output/model_estimation/reinforcement_learning"
+base_data_path = "/Users/dddd1007/Research/project9_fmri_spatial_stroop/data/output/model_estimation/reinforcement_learning/single_sub"
+save_data_path = "/Users/dddd1007/Research/project9_fmri_spatial_stroop/data/output/model_estimation/reinforcement_learning"
 
 for (cate_i in cate_list) {
     files_loc <- file.path(base_data_path, cate_i)
