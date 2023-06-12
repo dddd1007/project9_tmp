@@ -3,7 +3,6 @@ include("def_data_type.jl")
 include("calc_goodness.jl")
 include("estimate_models.jl")
 
-using Debugger
 
 # import the data
 raw_data  = CSV.read("/Volumes/XXK-DISK/project9_fmri_spatial_stroop/data/input/behavioral_data/all_data.csv", DataFrame)
@@ -133,8 +132,8 @@ for model_type in model_type_list
 
         if model_type == "ab_no_v"
             print("ab_no_v\n")
-            print("the alpha is", single_sub_param.alpha[1], "\n")
-            print("the loglikelihood is", single_sub_param.loglikelihood[1], "\n")
+            print("the alpha is ", single_sub_param.alpha[1], "\n")
+            print("the loglikelihood is ", single_sub_param.loglikelihood[1], "\n")
             model_result = ab_model(single_sub_param.alpha[1], congruency_vector)
             ab_no_v_p  = vcat(ab_no_v_p,  model_result["Predicted sequence"])
             ab_no_v_pe = vcat(ab_no_v_pe, abs.(model_result["Prediciton error"]))
@@ -142,8 +141,8 @@ for model_type in model_type_list
 
         if model_type == "ab_v"
             print("ab_v\n")
-            print("the alpha_s is", single_sub_param.alpha_s[1], "\n")
-            print("the alpha_v is", single_sub_param.alpha_v[1], "\n")
+            print("the alpha_s is ", single_sub_param.alpha_s[1], "\n")
+            print("the alpha_v is ", single_sub_param.alpha_v[1], "\n")
             print("the loglikelihood is", single_sub_param.loglikelihood[1], "\n")
             model_result = ab_volatility_model(single_sub_param.alpha_s[1], single_sub_param.alpha_v[1],
                                                congruency_vector, volatile_vector)
@@ -153,7 +152,7 @@ for model_type in model_type_list
 
         if model_type == "sr_no_v"
             print("sr_no_v\n")
-            print("the alpha is", single_sub_param.alpha[1], "\n")
+            print("the alpha is ", single_sub_param.alpha[1], "\n")
             print("the loglikelihood is", single_sub_param.loglikelihood[1], "\n")
             model_result = sr_sep_alpha_model(single_sub_param.alpha[1], single_sub_param.alpha[1],
                                               stim_loc_vector, resp_vector)
@@ -163,12 +162,11 @@ for model_type in model_type_list
 
         if model_type == "sr_v"
             print("sr_v\n")
-            print("the alpha_s is", single_sub_param.alpha_s[1], "\n")
-            print("the alpha_v is", single_sub_param.alpha_v[1], "\n")
+            print("the alpha_s is ", single_sub_param.alpha_s[1], "\n")
+            print("the alpha_v is ", single_sub_param.alpha_v[1], "\n")
             print("the loglikelihood is", single_sub_param.loglikelihood[1], "\n")
-            model_result = sr_sep_alpha_volatility_model(single_sub_param.alpha_s[1], single_sub_param.alpha_s[1],
-                                                         single_sub_param.alpha_v[1], single_sub_param.alpha_v[1],
-                                                         stim_loc_vector, resp_vector, volatile_vector)
+            model_result = sr_volatility_model(single_sub_param.alpha_s[1], single_sub_param.alpha_s[1],
+                                               stim_loc_vector, resp_vector, volatile_vector)
             sr_v_p  = vcat(sr_v_p,  model_result["Predicted sequence"])
             sr_v_pe = vcat(sr_v_pe, abs.(model_result["Prediciton error"]))
             sr_v_ll = vcat(sr_v_ll, model_result["Predicied Left sequence"])
@@ -192,6 +190,6 @@ all_data_with_rl = insertcols(raw_data, (:rl_ab_no_v_p  => ab_no_v_p),
 
 # Save the result
 import XLSX
-XLSX.writetable("/Volumes/XXK-DISK/project9_fmri_spatial_stroop/data/output/behavior/all_data_with_rl.xlsx",
+XLSX.writetable("/Volumes/XXK-DISK/project9_fmri_spatial_stroop/data/output/model_estimation/reinforcement_learning/all_data_with_rl.xlsx",
                 all_data_with_rl,
                 overwrite=true)
