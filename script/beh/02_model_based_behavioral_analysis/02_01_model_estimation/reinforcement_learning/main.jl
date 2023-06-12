@@ -3,6 +3,8 @@ include("def_data_type.jl")
 include("calc_goodness.jl")
 include("estimate_models.jl")
 
+using Debugger
+
 # import the data
 raw_data  = CSV.read("/Volumes/XXK-DISK/project9_fmri_spatial_stroop/data/input/behavioral_data/all_data.csv", DataFrame)
 save_path = "/Volumes/XXK-DISK/project9_fmri_spatial_stroop/data/output/model_estimation/reinforcement_learning/single_sub"
@@ -26,6 +28,7 @@ for sub_num_i in sub_list
     ### 开始进行模型估计
 
     # AB-NoVolatile
+    print("=== AB-NoVolatile === \n")
     sub_num_list = []
     alpha_list = []
     loglikelihood_list = []
@@ -41,6 +44,7 @@ for sub_num_i in sub_list
     CSV.write(write_filename, AB_NoVolatile_result)
 
     # AB-Volatile
+    print("=== AB-Volatile === \n")
     sub_num_list = []
     alpha_s_list = []
     alpha_v_list = []
@@ -60,6 +64,7 @@ for sub_num_i in sub_list
     CSV.write(write_filename, AB_Volatile_result)
 
     # SR-NoVolatile
+    print("=== SR-NoVolatile === \n")
     sub_num_list = []
     alpha_list = []
     loglikelihood_list = []
@@ -75,13 +80,14 @@ for sub_num_i in sub_list
     CSV.write(write_filename, SR_NoVolatile_result)
 
     # SR-Volatile
+    print("=== SR-Volatile === \n")
     sub_num_list = []
     alpha_s_list = []
     alpha_v_list = []
     loglikelihood_list = []
     for alpha_s in collect(0.01:0.01:1)
         for alpha_v in collect(0.01:0.01:1)
-            input_data = rl_sr_sep_alpha_volatility_data(alpha_s, alpha_s, alpha_v, alpha_v, stim_loc_vector, resp_vector, volatile_vector)
+            input_data = rl_sr_volatility_data(alpha_s, alpha_v, stim_loc_vector, resp_vector, volatile_vector)
             idx = calc_rl_fit_goodness(input_data)
             push!(sub_num_list, sub_num_i)
             push!(alpha_s_list, alpha_s)

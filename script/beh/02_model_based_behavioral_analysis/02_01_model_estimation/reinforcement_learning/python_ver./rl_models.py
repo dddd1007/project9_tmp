@@ -258,8 +258,8 @@ def compute_goodness_vola_indep(model_name, data, alpha):
 
 def batch_calc_log_likelihood_vola_dep(model_name, data):
     results_list = []
-    for alpha_s in np.arange(0, 1.01, 0.01):
-        for alpha_v in np.arange(0, 1.01, 0.01):
+    for alpha_s in np.arange(0.01, 1, 0.01):
+        for alpha_v in np.arange(0.01, 1, 0.01):
             results = compute_goodness_vola_dep(model_name, data, alpha_s, alpha_v)
             results_list.append(
                 [alpha_s, alpha_v, results.llf, results.aic, results.bic]
@@ -274,7 +274,7 @@ def batch_calc_log_likelihood_vola_dep(model_name, data):
 
 def batch_calc_log_likelihood_vola_indep(model_name, data):
     results_list = []
-    for alpha in np.arange(0, 1.01, 0.01):
+    for alpha in np.arange(0.01, 1, 0.01):
         results = compute_goodness_vola_indep(model_name, data, alpha)
         results_list.append([alpha, results.llf, results.aic, results.bic])
 

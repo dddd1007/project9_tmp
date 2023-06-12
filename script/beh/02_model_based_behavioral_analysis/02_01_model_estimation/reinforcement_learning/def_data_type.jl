@@ -36,16 +36,6 @@ struct rl_sr_sep_alpha_data
     reaction_loc_seq::Vector{Int}
 end
 
-struct rl_sr_sep_alpha_volatility_data
-    α_s_l::Float64
-    α_s_r::Float64
-    α_v_l::Float64
-    α_v_r::Float64
-    stim_loc_seq::Vector{Int}
-    reaction_loc_seq::Vector{Int}
-    exp_volatility_seq::Vector{Int}
-end
-
 # 构建计算 loglikelihood 的函数
 
 ## helper functions
@@ -60,5 +50,3 @@ function calc_fit_idx(model_fitting, fit_idx)
         return deviance(model_fitting)/dof_residual(model_fitting)
     end
 end
-
-
