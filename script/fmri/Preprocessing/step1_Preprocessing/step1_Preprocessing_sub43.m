@@ -2,7 +2,7 @@ clear, clc
 global defaults; spm_get_defaults;
 %spm('Defaults','FMRI');
 
-homefolder = '/Volumes/XXK-DISK/project9_input/fmri_data/nii';
+homefolder = '/Volumes/XXK-DISK/project9_fmri_spatial_stroop/data/input/fmri_data/nii/';
 
 datapath        = [homefolder filesep];  % Root-directory
 
@@ -16,7 +16,7 @@ deleteDummies   = 4;
 
 doDICOM =  0;
 
-doDelete  = 1;
+doDelete  = 0;
 doRealign = 1;
 doCoreg   = 1;
 doNormalise = 1;
