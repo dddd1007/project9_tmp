@@ -5,7 +5,7 @@ from nipype.algorithms.modelgen import SpecifySPMModel
 
 # 设定基本参数
 import pandas as pd
-all_data = pd.read_csv("/Volumes/XXK-DISK/project9_fmri_spatial_stroop/data/input/all_data_with_params.csv")
+all_data = pd.read_csv("/Users/dddd1007/Library/CloudStorage/Dropbox/Work/博士工作/研究数据/Project4_EEG_Vollatility_to_Control/data/input/all_data_with_params.csv")
 
 # condition names
 condition_names = ["run_1", "", "run_1xcongruency_num^1", "", "run_1xbl_sr_v^1", "", "run_1xbl_sr_PE^1", "", "run_error_1", "", "X", "Y", "Z", "x_r", "y_r", "z_r",
@@ -32,8 +32,8 @@ session_num = 6
 params_name = ['congruency_num', 'bl_sr_v', 'bl_sr_PE'] # There must be a list
 
 # Dirs
-root_dir = '/Volumes/XXK-DISK/project9_fmri_spatial_stroop/data/input/fmri_data/nii'
-output_dir = '/Volumes/XXK-DISK/project9_fmri_spatial_stroop/data/output/fmri/paramGLM/bl/1stLevel'
+root_dir = '/Users/dddd1007/Library/CloudStorage/Dropbox/Work/博士工作/研究数据/Project4_EEG_Vollatility_to_Control/data/input/fmri_data/nii'
+output_dir = '/Users/dddd1007/Library/CloudStorage/Dropbox/Work/博士工作/研究数据/Project4_EEG_Vollatility_to_Control/data/output/fmri/paramGLM/bl/1stLevel'
 
 # Helper functions
 

@@ -1,7 +1,7 @@
 library(tidyverse)
 cate_list <- c("ab_no_v", "ab_v", "sr_no_v", "sr_v")
-base_data_path <- "/Volumes/XXK-DISK/project9_fmri_spatial_stroop/data/output/model_estimation/reinforcement_learning/single_sub"
-save_data_path <- "/Volumes/XXK-DISK/project9_fmri_spatial_stroop/data/output/model_estimation/reinforcement_learning/"
+base_data_path <- "/Users/dddd1007/Library/CloudStorage/Dropbox/Work/博士工作/研究数据/Project4_EEG_Vollatility_to_Control/data/output/model_estimation/reinforcement_learning/single_sub"
+save_data_path <- "/Users/dddd1007/Library/CloudStorage/Dropbox/Work/博士工作/研究数据/Project4_EEG_Vollatility_to_Control/data/output/model_estimation/reinforcement_learning/"
 
 for (cate_i in cate_list) {
     files_loc <- file.path(base_data_path, cate_i)

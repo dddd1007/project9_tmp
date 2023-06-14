@@ -2,7 +2,7 @@ clear, clc
 global defaults; spm_get_defaults;
 %spm('Defaults','FMRI');
 
-homefolder = '/Volumes/XXK-DISK/project9_fmri_spatial_stroop/data/input/fmri_data/nii/';
+homefolder = '/Users/dddd1007/Library/CloudStorage/Dropbox/Work/博士工作/研究数据/Project4_EEG_Vollatility_to_Control/data/input/fmri_data/nii/';
 
 datapath        = [homefolder filesep];  % Root-directory
 
