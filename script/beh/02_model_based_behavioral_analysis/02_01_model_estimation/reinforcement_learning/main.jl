@@ -5,8 +5,8 @@ include("estimate_models.jl")
 
 
 # import the data
-raw_data  = CSV.read("/Users/dddd1007/Library/CloudStorage/Dropbox/Work/博士工作/研究数据/Project4_EEG_Vollatility_to_Control/data/input/behavioral_data/all_data.csv", DataFrame)
-save_path = "/Users/dddd1007/Library/CloudStorage/Dropbox/Work/博士工作/研究数据/Project4_EEG_Vollatility_to_Control/data/output/model_estimation/reinforcement_learning/single_sub"
+raw_data  = CSV.read("/Users/dddd1007/Library/CloudStorage/Dropbox/Work/phd work/research/project9_fmri_spatial_stroopdata/input/behavioral_data/all_data.csv", DataFrame)
+save_path = "/Users/dddd1007/Library/CloudStorage/Dropbox/Work/phd work/research/project9_fmri_spatial_stroopdata/output/model_estimation/reinforcement_learning/single_sub"
 
 # get basic parameters
 sub_list = unique(raw_data[!,:sub_num])
@@ -100,7 +100,7 @@ for sub_num_i in sub_list
 end
 
 ###### model recovery
-optim_param_file_loc = "/Users/dddd1007/Library/CloudStorage/Dropbox/Work/博士工作/研究数据/Project4_EEG_Vollatility_to_Control/data/output/model_estimation/reinforcement_learning/single_sub/"
+optim_param_file_loc = "/Users/dddd1007/Library/CloudStorage/Dropbox/Work/phd work/research/project9_fmri_spatial_stroopdata/output/model_estimation/reinforcement_learning/single_sub/"
 model_type_list = ["ab_no_v", "ab_v", "sr_no_v", "sr_v"]
 
 ab_no_v_p  = []
@@ -190,6 +190,6 @@ all_data_with_rl = insertcols(raw_data, (:rl_ab_no_v_p  => ab_no_v_p),
 
 # Save the result
 import XLSX
-XLSX.writetable("/Users/dddd1007/Library/CloudStorage/Dropbox/Work/博士工作/研究数据/Project4_EEG_Vollatility_to_Control/data/output/model_estimation/reinforcement_learning/all_data_with_rl.xlsx",
+XLSX.writetable("/Users/dddd1007/Library/CloudStorage/Dropbox/Work/phd work/research/project9_fmri_spatial_stroopdata/output/model_estimation/reinforcement_learning/all_data_with_rl.xlsx",
                 all_data_with_rl,
                 overwrite=true)

@@ -8,10 +8,10 @@ model_names = [
     "rl_ab_vola_indep",
 ]
 raw_data = pd.read_csv(
-    "/Users/dddd1007/Library/CloudStorage/Dropbox/Work/博士工作/研究数据/Project4_EEG_Vollatility_to_Control/data/input/behavioral_data/all_data.csv"
+    "/Users/dddd1007/Library/CloudStorage/Dropbox/Work/phd work/research/project9_fmri_spatial_stroopdata/input/behavioral_data/all_data.csv"
 )
-file_read_path = "/Users/dddd1007/Library/CloudStorage/Dropbox/Work/博士工作/研究数据/Project4_EEG_Vollatility_to_Control/data/output/model_estimation/reinforcement_learning/single_sub"
-file_save_path = "/Users/dddd1007/Library/CloudStorage/Dropbox/Work/博士工作/研究数据/Project4_EEG_Vollatility_to_Control/data/output/model_estimation/reinforcement_learning/optim_params"
+file_read_path = "/Users/dddd1007/Library/CloudStorage/Dropbox/Work/phd work/research/project9_fmri_spatial_stroopdata/output/model_estimation/reinforcement_learning/single_sub"
+file_save_path = "/Users/dddd1007/Library/CloudStorage/Dropbox/Work/phd work/research/project9_fmri_spatial_stroopdata/output/model_estimation/reinforcement_learning/optim_params"
 sub_list = np.unique(raw_data["sub_num"])
 
 for model_name_i in model_names:

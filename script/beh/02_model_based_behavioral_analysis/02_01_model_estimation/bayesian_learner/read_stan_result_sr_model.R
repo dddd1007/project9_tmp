@@ -2,9 +2,9 @@ library(cmdstanr)
 library(tidyverse)
 library(here)
 
-read_loc <- here("data","output","model_estimation","bayesian_learner","single_sub")
-save_loc <- here("data","output","model_estimation","bayesian_learner","single_sub")
-sub_data <- read.csv(here("data","input", "behavioral_data", "all_data.csv"))
+read_loc <- here("data", "output", "model_estimation", "bayesian_learner", "single_sub")
+save_loc <- here("data", "output", "model_estimation", "bayesian_learner", "single_sub")
+sub_data <- read.csv(here("data", "input", "behavioral_data", "all_data.csv"))
 
 for (single_sub_num in unique(sub_data$sub_num)) {
     ######### SR ############
@@ -26,13 +26,13 @@ for (single_sub_num in unique(sub_data$sub_num)) {
 
     # 分条件将数据读取并求均值
 
-    # r_l指刺激物空间位置在左侧时，右手按键的概率
+    # r_l 指刺激物空间位置在左侧时，右手按键的概率
     rlr_data <- select(stan_data, starts_with("r_l"))
     rlr_mean <- apply(rlr_data, 2, mean)
     rlr_mean <- c(0.5, rlr_mean) # stan 的估计结果为当前试次更新后的, 因此需要向后推一个试次
     rll_mean <- 1 - rlr_mean
 
-    # r_r指刺激物空间位置在右侧时，右手按键的概率
+    # r_r 指刺激物空间位置在右侧时，右手按键的概率
     rrr_data <- select(stan_data, starts_with("r_r"))
     rrr_mean <- apply(rrr_data, 2, mean)
     rrr_mean <- c(0.5, rrr_mean)
@@ -42,7 +42,7 @@ for (single_sub_num in unique(sub_data$sub_num)) {
     v_data <- select(stan_data, starts_with("v"))
     v_mean <- apply(v_data, 2, mean)
 
-    # 根据被试应当正确的行为选出对应的r
+    # 根据被试应当正确的行为选出对应的 r
 
     r_selected <- vector(mode = "numeric", length = nrow(single_sub_data))
     for (i in seq_len(nrow(single_sub_data))) {
@@ -93,7 +93,7 @@ for (single_sub_num in unique(sub_data$sub_num)) {
     v_data <- select(stan_data, starts_with("v"))
     v_mean <- apply(v_data, 2, mean)
 
-    # 根据被试的行为选出对应的r
+    # 根据被试的行为选出对应的 r
 
     r_selected <- vector(mode = "numeric", length = nrow(single_sub_data))
     for (i in seq_len(nrow(single_sub_data))) {

@@ -3,7 +3,7 @@
 % spm SPM - SPM12 (7771)
 % cfg_basicio BasicIO - Unknown
 %-----------------------------------------------------------------------
-matlabbatch{1}.spm.stats.con.spmmat = {'/Users/dddd1007/Library/CloudStorage/Dropbox/Work/博士工作/研究数据/Project4_EEG_Vollatility_to_Control/data/output/fmri/condGLM/reverse_control/1stLevel/sub43/SPM.mat'};
+matlabbatch{1}.spm.stats.con.spmmat = {'/Users/dddd1007/Library/CloudStorage/Dropbox/Work/phd work/research/project9_fmri_spatial_stroopdata/output/fmri/condGLM/reverse_control/1stLevel/sub43/SPM.mat'};
 matlabbatch{1}.spm.stats.con.consess{1}.tcon.name = 'S_MC_Con';
 matlabbatch{1}.spm.stats.con.consess{1}.tcon.weights = [0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0];
 matlabbatch{1}.spm.stats.con.consess{1}.tcon.sessrep = 'none';

@@ -34,11 +34,11 @@ def char_to_num(char_vector, rule):
 
 # import the data
 raw_data = pd.read_csv(
-    "/Users/dddd1007/Library/CloudStorage/Dropbox/Work/博士工作/研究数据/Project4_EEG_Vollatility_to_Control/data/input/behavioral_data/all_data.csv"
+    "/Users/dddd1007/Library/CloudStorage/Dropbox/Work/phd work/research/project9_fmri_spatial_stroopdata/input/behavioral_data/all_data.csv"
 )
 
 # set the parameters
-file_save_path = "/Users/dddd1007/Library/CloudStorage/Dropbox/Work/博士工作/研究数据/Project4_EEG_Vollatility_to_Control/data/output/model_estimation/reinforcement_learning/single_sub"
+file_save_path = "/Users/dddd1007/Library/CloudStorage/Dropbox/Work/phd work/research/project9_fmri_spatial_stroopdata/output/model_estimation/reinforcement_learning/single_sub"
 sub_list = np.unique(raw_data["sub_num"])
 
 # estimate the reinforcement learning model for each subject

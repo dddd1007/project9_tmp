@@ -6,7 +6,7 @@ extract_data <- function(file) {
     foo <- raw_data %>%
         dplyr::filter(is.na(practice_trials.thisN)) %>%
         dplyr::select(
-            sub_num, run, volatile, prop, congruency, stim_image_loc, corr_resp, stim_resp.rt,
+            sub_num, run, block, volatile, prop, congruency, stim_image_loc, corr_resp, stim_resp.rt,
             stim_resp.corr, one_key_resp.started, one_key_resp.rt, stim_image.started, group
         ) %>%
         dplyr::filter(!is.na(corr_resp)) %>%

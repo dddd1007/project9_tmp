@@ -1,7 +1,7 @@
 library(tidyverse)
 library(here)
-data_loc <- here("data","output","model_estimation","bayesian_learner")
-sub_data <- read.csv(here("data","input","behavioral_data","all_data.csv"))
+data_loc <- here("data", "output", "model_estimation", "bayesian_learner")
+sub_data <- read.csv(here("data", "input", "behavioral_data", "all_data.csv"))
 
 sub_num_list <- sort(unique(sub_data$sub_num))
 
@@ -17,7 +17,7 @@ for (i in sub_num_list) {
 
 all_ab_data_result <- bind_rows(all_ab_data_list, .id = "column_label")
 all_ab_data_result <- mutate(all_ab_data_result, PE = 1 - r_selected)
-colnames(all_ab_data_result) <- paste("ab", colnames(all_ab_data_result), sep = "_")
+colnames(all_ab_data_result) <- paste("bl_ab", colnames(all_ab_data_result), sep = "_")
 
 ## SR
 data_loc_sr <- paste0(data_loc, "/single_sub/sr/extracted_data/")
@@ -31,8 +31,8 @@ for (i in sub_num_list) {
 
 all_sr_data_result <- bind_rows(all_sr_data_list, .id = "column_label")
 all_sr_data_result <- mutate(all_sr_data_result, PE = 1 - r_selected)
-colnames(all_sr_data_result) <- paste("sr", colnames(all_sr_data_result), sep = "_")
+colnames(all_sr_data_result) <- paste("bl_sr", colnames(all_sr_data_result), sep = "_")
 
 ## combine two data sets
 all_bl_data <- cbind(all_ab_data_result, all_sr_data_result)
-write.csv(all_bl_data, here("data","output","model_estimation","bayesian_learner","all_bl_data.csv"))
+write.csv(all_bl_data, here("data", "output", "model_estimation", "bayesian_learner", "all_bl_data.csv"))

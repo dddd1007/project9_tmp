@@ -1,0 +1,109 @@
+对于之前分析的行为数据, 存在平均数和 delta plot 不匹配的情况, 因此进一步做一些分析验证一下.
+
+**导入包和数据**
+```{r}
+library(tidyverse)
+library(here)
+raw_data <- read.csv(here("data", "input", "all_data_with_params.csv"))
+```
+
+概览数据的情况
+```{r}
+head(raw_data)
+glimpse(raw_data)
+```
+
+首先尝试把 delta plot 当中的具体数据点标记出来, 查看是否有离群点
+```{r}
+all_data_without_outlier <- raw_data %>%
+    filter(corr_resp == 1) %>%
+    group_by(sub_num, congruency, prop, volatile, rule, run) %>%
+    filter(between(stim_resp.rt, mean(stim_resp.rt, na.rm = TRUE) -
+                     (3 * sd(stim_resp.rt, na.rm = TRUE)),
+                                 mean(stim_resp.rt, na.rm = TRUE) +
+                     (3 * sd(stim_resp.rt, na.rm = TRUE)))) %>%
+    ungroup()
+
+total_result_list <- array(0, dim = c(3, 4, max(unique(all_data_without_outlier$sub_num))))
+for (i in unique(all_data_without_outlier$sub_num)) {
+    print(paste0("============ Begin to process the data of one subject ", i, " ============"))
+    foo <- all_data_without_outlier %>%
+        filter(sub_num == i) %>%
+        select(stim_resp.rt, congruency, prop, volatile, trial, sub_num) %>%
+        pivot_wider(names_from = c(prop, congruency, volatile), values_from = stim_resp.rt)
+    S_MC_inc_data <- sort(na.omit(foo$MC_inc_s))
+    S_MI_inc_data <- sort(na.omit(foo$MI_inc_s))
+    S_MC_con_data <- sort(na.omit(foo$MC_con_s))
+    S_MC_inc_data <- sort(na.omit(foo$MC_inc_s))
+    V_MC_inc_data <- sort(na.omit(foo$MC_inc_v))
+    V_MI_inc_data <- sort(na.omit(foo$MI_inc_v))
+    V_MC_con_data <- sort(na.omit(foo$MC_con_v))
+    V_MC_inc_data <- sort(na.omit(foo$MC_inc_v))
+
+    quantile_S_MC_inc <- quantile(S_MC_inc_data, probs = c(1, 2, 3) / 3)
+    quantile_S_MI_inc <- quantile(S_MI_inc_data, probs = c(1, 2, 3) / 3)
+    quantile_S_MC_con <- quantile(S_MC_con_data, probs = c(1, 2, 3) / 3)
+    quantile_S_MC_inc <- quantile(S_MC_inc_data, probs = c(1, 2, 3) / 3)
+    quantile_V_MC_inc <- quantile(V_MC_inc_data, probs = c(1, 2, 3) / 3)
+    quantile_V_MI_inc <- quantile(V_MI_inc_data, probs = c(1, 2, 3) / 3)
+    quantile_V_MC_con <- quantile(V_MC_con_data, probs = c(1, 2, 3) / 3)
+    quantile_V_MC_inc <- quantile(V_MC_inc_data, probs = c(1, 2, 3) / 3)
+
+    simon_S_MC <- c(
+        mean(S_MC_inc_data[S_MC_inc_data <= quantile_S_MC_inc[1]]) -
+            mean(S_MC_con_data[S_MC_con_data <= quantile_S_MC_con[1]]),
+        mean(S_MC_inc_data[S_MC_inc_data <= quantile_S_MC_inc[2] & S_MC_inc_data > quantile_S_MC_inc[1]]) -
+            mean(S_MC_con_data[S_MC_con_data <= quantile_S_MC_con[2] & S_MC_con_data > quantile_S_MC_con[1]]),
+        mean(S_MC_inc_data[S_MC_inc_data <= quantile_S_MC_inc[3] & S_MC_inc_data > quantile_S_MC_inc[2]]) -
+            mean(S_MC_con_data[S_MC_con_data <= quantile_S_MC_con[3] & S_MC_con_data > quantile_S_MC_con[2]])
+    )
+    simon_S_MI <- c(
+        mean(S_MI_inc_data[S_MI_inc_data <= quantile_S_MI_inc[1]]) -
+            mean(S_MC_con_data[S_MC_con_data <= quantile_S_MC_con[1]]),
+        mean(S_MI_inc_data[S_MI_inc_data <= quantile_S_MI_inc[2] & S_MI_inc_data > quantile_S_MI_inc[1]]) -
+            mean(S_MC_con_data[S_MC_con_data <= quantile_S_MC_con[2] & S_MC_con_data > quantile_S_MC_con[1]]),
+        mean(S_MI_inc_data[S_MI_inc_data <= quantile_S_MI_inc[3] & S_MI_inc_data > quantile_S_MI_inc[2]]) -
+            mean(S_MC_con_data[S_MC_con_data <= quantile_S_MC_con[3] & S_MC_con_data > quantile_S_MC_con[2]])
+    )
+    simon_V_MC <- c(
+        mean(V_MC_inc_data[V_MC_inc_data <= quantile_V_MC_inc[1]]) -
+            mean(V_MC_con_data[V_MC_con_data <= quantile_V_MC_con[1]]),
+        mean(V_MC_inc_data[V_MC_inc_data <= quantile_V_MC_inc[2] & V_MC_inc_data > quantile_V_MC_inc[1]]) -
+            mean(V_MC_con_data[V_MC_con_data <= quantile_V_MC_con[2] & V_MC_con_data > quantile_V_MC_con[1]]),
+        mean(V_MC_inc_data[V_MC_inc_data <= quantile_V_MC_inc[3] & V_MC_inc_data > quantile_V_MC_inc[2]]) -
+            mean(V_MC_con_data[V_MC_con_data <= quantile_V_MC_con[3] & V_MC_con_data > quantile_V_MC_con[2]])
+    )
+    simon_V_MI <- c(
+        mean(V_MI_inc_data[V_MI_inc_data <= quantile_V_MI_inc[1]]) -
+            mean(V_MC_con_data[V_MC_con_data <= quantile_V_MC_con[1]]),
+        mean(V_MI_inc_data[V_MI_inc_data <= quantile_V_MI_inc[2] & V_MI_inc_data > quantile_V_MI_inc[1]]) -
+            mean(V_MC_con_data[V_MC_con_data <= quantile_V_MC_con[2] & V_MC_con_data > quantile_V_MC_con[1]]),
+        mean(V_MI_inc_data[V_MI_inc_data <= quantile_V_MI_inc[3] & V_MI_inc_data > quantile_V_MI_inc[2]]) -
+            mean(V_MC_con_data[V_MC_con_data <= quantile_V_MC_con[3] & V_MC_con_data > quantile_V_MC_con[2]])
+    )
+    single_sub_matrix <- cbind(simon_S_MC, simon_S_MI, simon_V_MC, simon_V_MI)
+    total_result_list[, , i] <- single_sub_matrix
+}
+
+new_table_list <- list()
+count_num <- 1
+for (i in 9:43) {
+    tmp_table <- data.frame(total_result_list[, , i])
+    colnames(tmp_table) <- c("S_MC", "S_MI", "V_MC", "V_MI")
+    tmp_table$part <- c("1", "2", "3")
+    tmp_table$sub_num <- i
+    new_table_list[[count_num]] <- tmp_table
+    count_num <- count_num + 1
+}
+
+new_table <- do.call(rbind, new_table_list)
+new_table <- pivot_longer(new_table, cols = c("S_MC", "S_MI", "V_MC", "V_MI"),
+                          names_to = "type", values_to = "value")
+new_table <- tidyr::separate(new_table, col = "type", into = c("volatile", "prop"), sep = "_")
+
+ggplot(new_table) +
+  geom_point(aes(x = part, y = value)) +
+  geom_boxplot(aes(x = part, y = value)) +
+  facet_grid(prop ~ volatile) -> delta_plot_single_sub
+ggsave(here("data", "output", "behavior", "project9_delta_plot_single_sub.png"), delta_plot_single_sub, width = 30, height = 20, units = "cm")
+```

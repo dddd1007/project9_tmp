@@ -54,7 +54,7 @@ total_result_list <- list(rt_result_a$asDataFrame(),
                           corr_result_a$asDataFrame(),
                           corr_result_b$asDataFrame(),
                           corr_result_c$asDataFrame())
-write_xlsx(total_result_list, here("data", "output", "reverse_stroop.xlsx"))
+write_xlsx(total_result_list, here("data", "output", "behavior", "reverse_stroop.xlsx"))
 ```
 
 ```{r}
@@ -98,11 +98,13 @@ aov(stim_resp.rt ~ congruency * prop * volatile, data = all_data_without_outlier
 # Delta plot
 source(here("script", "beh", "01_behavioral_data_analysis", "delta_plot.R"))
 delta_plot
-ggsave(here("data", "output", "project9_delta_plot.png"), delta_plot, width = 5, height = 3, dpi = 500)
+ggsave(here("data", "output", "behavior", "project9_delta_plot.png"), 
+       delta_plot, width = 5, height = 3, dpi = 500)
 ```
 ```{r}
 # CAFs plotq
 source(here("script", "beh", "01_behavioral_data_analysis", "cafs_plot.R"))
 cafs_plot
-ggsave(here("data", "output", "project9_cafs_plot.png"), cafs_plot, width = 5, height = 3, dpi = 500)
+ggsave(here("data", "output", "behavior", "project9_cafs_plot.png"), 
+       cafs_plot, width = 5, height = 3, dpi = 500)
 ```

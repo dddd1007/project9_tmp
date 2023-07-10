@@ -14,7 +14,7 @@ import multiprocessing
 num_cores = 6
 
 # 读取被试数据
-all_data = pd.read_csv("/Users/dddd1007/Library/CloudStorage/Dropbox/Work/博士工作/研究数据/Project4_EEG_Vollatility_to_Control/data/input/all_data_with_params.csv")
+all_data = pd.read_csv("/Users/dddd1007/Library/CloudStorage/Dropbox/Work/phd work/research/project9_fmri_spatial_stroopdata/input/all_data_with_params.csv")
 all_data['PC_factor'] = all_data[['volatile', 'prop', 'congruency']].apply(lambda row: '_'.join(row.astype(str)), axis=1)
 
 # 被试基本信息
@@ -23,8 +23,8 @@ sub_num_list = sub_num_list[sub_num_list != 41]
 session_num = 6
 
 # 数据位置
-root_dir = "/Users/dddd1007/Library/CloudStorage/Dropbox/Work/博士工作/研究数据/Project4_EEG_Vollatility_to_Control/data/input/fmri_data/nii"
-output_dir = "/Users/dddd1007/Library/CloudStorage/Dropbox/Work/博士工作/研究数据/Project4_EEG_Vollatility_to_Control/data/output/fmri/"
+root_dir = "/Users/dddd1007/Library/CloudStorage/Dropbox/Work/phd work/research/project9_fmri_spatial_stroopdata/input/fmri_data/nii"
+output_dir = "/Users/dddd1007/Library/CloudStorage/Dropbox/Work/phd work/research/project9_fmri_spatial_stroopdata/output/fmri/"
 
 ##
 ## PC effect
